@@ -12,11 +12,13 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4 animate-slide-in`}>
       <div
         className={`max-w-[80%] rounded-lg p-3 ${
-          isUser ? 'bg-blue-500 text-white' : 'bg-chat-light border border-chat-border'
+          isUser 
+            ? 'bg-blue-500 dark:bg-blue-600 text-white' 
+            : 'bg-chat-light dark:bg-gray-800 border border-chat-border dark:border-gray-700'
         }`}
       >
         <p className="text-sm">{message.content}</p>
-        <span className={`text-xs mt-1 block ${isUser ? 'text-blue-100' : 'text-gray-500'}`}>
+        <span className={`text-xs mt-1 block ${isUser ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
           {format(message.timestamp, 'HH:mm')}
         </span>
       </div>

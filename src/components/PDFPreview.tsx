@@ -5,7 +5,6 @@ interface PDFPreviewProps {
   messages: ChatMessage[];
 }
 
-// Register a font
 Font.register({
   family: 'Inter',
   src: 'https://rsms.me/inter/font-files/Inter-Regular.woff2',
@@ -15,6 +14,8 @@ const styles = StyleSheet.create({
   page: {
     padding: 30,
     fontFamily: 'Inter',
+    backgroundColor: '#1a1a1a',
+    color: '#ffffff',
   },
   message: {
     marginBottom: 10,
@@ -22,21 +23,21 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   userMessage: {
-    backgroundColor: '#EBF8FF',
+    backgroundColor: '#2563eb',
   },
   systemMessage: {
-    backgroundColor: '#F7FAFC',
+    backgroundColor: '#374151',
   },
   timestamp: {
     fontSize: 10,
-    color: '#718096',
+    color: '#9ca3af',
     marginTop: 5,
   },
 });
 
 const PDFPreview = ({ messages }: PDFPreviewProps) => {
   return (
-    <PDFViewer className="w-full h-full">
+    <PDFViewer className="w-full h-full dark:bg-gray-900">
       <Document>
         <Page size="A4" style={styles.page}>
           {messages.map((message) => (

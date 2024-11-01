@@ -11,9 +11,9 @@ interface ChatSectionProps {
 
 const ChatSection = ({ messages, onNewMessage }: ChatSectionProps) => {
   return (
-    <div className="flex flex-col h-full border-r border-chat-border">
-      <div className="p-4 border-b border-chat-border">
-        <h2 className="text-lg font-semibold">Chat</h2>
+    <div className="flex flex-col h-full border-r border-chat-border dark:border-gray-700 dark:bg-gray-900">
+      <div className="p-4 border-b border-chat-border dark:border-gray-700">
+        <h2 className="text-lg font-semibold dark:text-white">Chat</h2>
       </div>
       
       <ScrollArea className="flex-1 p-4">
