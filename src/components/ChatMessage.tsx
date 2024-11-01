@@ -1,4 +1,4 @@
-import { ChatMessage } from '@/lib/types';
+import type { ChatMessage } from '@/lib/types';
 import { format } from 'date-fns';
 
 interface ChatMessageProps {

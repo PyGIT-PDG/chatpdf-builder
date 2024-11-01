@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { ChatMessage } from '@/lib/types';
+import type { ChatMessage } from '@/lib/types';
 import { Document, Page, Text, View, PDFViewer, StyleSheet, Font } from '@react-pdf/renderer';
 
 interface PDFPreviewProps {
