@@ -32,7 +32,8 @@ const Index = () => {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      <div className="flex justify-end p-4 border-b border-chat-border dark:border-gray-700">
+      <div className="flex justify-between items-center p-4 border-b border-chat-border dark:border-gray-700">
+        <h1 className="text-2xl font-bold dark:text-white">PDFGen</h1>
         <Button
           variant="outline"
           size="icon"
