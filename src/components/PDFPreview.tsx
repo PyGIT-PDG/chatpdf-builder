@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ChatMessage } from '@/lib/types';
 import EditPlaceholderModal from './EditPlaceholderModal';
 import { useToast } from './ui/use-toast';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 // Initialize pdfMake with the virtual file system
 (window as any).pdfMake = pdfMake;
@@ -20,6 +21,8 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlaceholder, setSelectedPlaceholder] = useState("");
   const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const processContent = (content: any): any => {
     if (typeof content === 'string') {
@@ -33,11 +36,12 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
           parts.push({ text: content.slice(lastIndex, match.index) });
         }
 
+        const encodedPlaceholder = encodeURIComponent(match[0]);
         parts.push({
           text: match[0],
           color: 'blue',
           decoration: 'underline',
-          link: '#' + encodeURIComponent(match[0]), // Use hash to prevent URL construction
+          link: `${window.location.pathname}?placeholder=${encodedPlaceholder}`,
           preserveLeadingSpaces: true
         });
 
@@ -73,6 +77,18 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
   }, [pdfContent]);
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const placeholder = searchParams.get('placeholder');
+    
+    if (placeholder) {
+      setSelectedPlaceholder(decodeURIComponent(placeholder));
+      setIsModalOpen(true);
+      // Clear the URL parameter after opening the modal
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.search, navigate]);
+
+  useEffect(() => {
     if (!currentContent) return;
     
     const pdfDocGenerator = pdfMake.createPdf({
@@ -85,24 +101,6 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
     pdfDocGenerator.getDataUrl((dataUrl) => {
       if (iframeRef.current) {
         iframeRef.current.src = dataUrl;
-        
-        iframeRef.current.onload = () => {
-          const iframeDocument = iframeRef.current?.contentDocument;
-          if (!iframeDocument) return;
-
-          iframeDocument.addEventListener('click', (e) => {
-            const target = e.target as HTMLElement;
-            if (target.tagName === 'A') {
-              e.preventDefault();
-              const href = target.getAttribute('href');
-              if (href && href.startsWith('#')) {
-                const placeholder = decodeURIComponent(href.substring(1));
-                setSelectedPlaceholder(placeholder);
-                setIsModalOpen(true);
-              }
-            }
-          });
-        };
       }
     });
   }, [currentContent]);
@@ -117,11 +115,12 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
       }
       if (typeof obj === 'object' && obj !== null) {
         if (obj.text === selectedPlaceholder && obj.link) {
+          const encodedNewValue = encodeURIComponent(`[${newValue}]`);
           return {
             text: `[${newValue}]`,
             color: 'blue',
             decoration: 'underline',
-            link: '#' + encodeURIComponent(`[${newValue}]`),
+            link: `${window.location.pathname}?placeholder=${encodedNewValue}`,
             preserveLeadingSpaces: true
           };
         }
