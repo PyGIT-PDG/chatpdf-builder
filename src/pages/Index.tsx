@@ -22,6 +22,7 @@ const Index = () => {
   const [pdfContent, setPdfContent] = useState(null);
   const [showInitialModal, setShowInitialModal] = useState(true);
   const [initialDescription, setInitialDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
@@ -39,13 +40,15 @@ const Index = () => {
   };
 
   const handleNewMessage = async (content: string) => {
+    const messageId = uuidv4();
     const userMessage: ChatMessage = {
-      id: uuidv4(),
+      id: messageId,
       content,
       timestamp: new Date(),
       type: "user",
     };
     setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
 
     try {
       const response = await sendChatMessage(content);
@@ -83,6 +86,8 @@ const Index = () => {
         type: "system",
       };
       setMessages((prev) => [...prev, errorChatMessage]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -133,7 +138,11 @@ const Index = () => {
       </div>
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         <div className="w-full md:w-[30%] md:min-w-[300px]">
-          <ChatSection messages={messages} onNewMessage={handleNewMessage} />
+          <ChatSection 
+            messages={messages} 
+            onNewMessage={handleNewMessage}
+            isLoading={isLoading}
+          />
         </div>
         <div className="flex-1 h-[50vh] md:h-auto">
           <PDFPreview pdfContent={pdfContent} />

@@ -7,9 +7,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface ChatSectionProps {
   onNewMessage: (content: string) => void;
   messages: ChatMessageType[];
+  isLoading?: boolean;
 }
 
-const ChatSection = ({ messages, onNewMessage }: ChatSectionProps) => {
+const ChatSection = ({ messages, onNewMessage, isLoading }: ChatSectionProps) => {
   return (
     <div className="flex flex-col h-full border-r border-chat-border dark:border-gray-700 dark:bg-gray-900">
       <div className="p-4 border-b border-chat-border dark:border-gray-700">
@@ -19,7 +20,11 @@ const ChatSection = ({ messages, onNewMessage }: ChatSectionProps) => {
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
+            <ChatMessage 
+              key={message.id} 
+              message={message} 
+              isLoading={isLoading && message === messages[messages.length - 1] && message.type === 'user'}
+            />
           ))}
         </div>
       </ScrollArea>
