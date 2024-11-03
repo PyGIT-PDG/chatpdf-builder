@@ -1,10 +1,19 @@
 import type { ChatMessage } from '@/lib/types';
 import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
+import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import { useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+// Properly initialize pdfMake with fonts
+(pdfMake as any).vfs = pdfFonts.pdfMake.vfs;
+(pdfMake as any).fonts = {
+  Helvetica: {
+    normal: 'Helvetica',
+    bold: 'Helvetica-Bold',
+    italics: 'Helvetica-Oblique',
+    bolditalics: 'Helvetica-BoldOblique'
+  }
+};
 
 interface PDFPreviewProps {
   messages: ChatMessage[];
