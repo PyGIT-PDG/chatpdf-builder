@@ -17,6 +17,19 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
+const EXAMPLE_PROMPTS = [
+  "Create me an invoice for client ABC for the services provided",
+  "Create me an employment contract for a new sales manager",
+  "Create me a non-disclosure agreement between my company and a contractor",
+  "Create me a legal notice for a breach of contract",
+  "Create me a financial report for the first quarter of 2024",
+  "Create me a meeting agenda for the project kickoff meeting",
+  "Create me a business proposal for the XYZ project",
+  "Create me a purchase order for 50 laptops",
+  "Create me a formal letter to request a visa",
+  "Create me a presentation on the company's annual performance"
+];
+
 const Index = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [pdfContent, setPdfContent] = useState(null);
@@ -25,6 +38,11 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+
+  // Get 4 random examples
+  const randomExamples = EXAMPLE_PROMPTS
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 4);
 
   const extractPDFContent = (response: string) => {
     try {
@@ -102,20 +120,35 @@ const Index = () => {
   return (
     <div className="flex flex-col h-screen bg-background">
       <Dialog open={showInitialModal} onOpenChange={setShowInitialModal}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Welcome to PDFGen</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-2xl">Welcome to PDFGen</DialogTitle>
+            <DialogDescription className="text-lg pt-2">
               Describe the type of PDF document you would like to create
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleInitialSubmit} className="space-y-4">
+          <form onSubmit={handleInitialSubmit} className="space-y-6">
             <Textarea
               value={initialDescription}
               onChange={(e) => setInitialDescription(e.target.value)}
               placeholder="E.g., Create a professional resume template..."
-              className="w-full min-h-[100px]"
+              className="w-full min-h-[120px]"
             />
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">Example prompts:</p>
+              <div className="grid grid-cols-1 gap-3">
+                {randomExamples.map((example, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    className="justify-start h-auto py-3 px-4 whitespace-normal text-left"
+                    onClick={() => setInitialDescription(example)}
+                  >
+                    {example}
+                  </Button>
+                ))}
+              </div>
+            </div>
             <Button type="submit" className="w-full">
               Start Creating
             </Button>
