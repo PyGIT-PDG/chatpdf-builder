@@ -10,13 +10,14 @@ pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
 
 interface PDFPreviewProps {
   messages: ChatMessage[];
+  pdfContent?: any;
 }
 
-const PDFPreview = ({ messages }: PDFPreviewProps) => {
+const PDFPreview = ({ messages, pdfContent }: PDFPreviewProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
-    const docDefinition = {
+    const docDefinition = pdfContent || {
       content: [
         { text: 'PDFGen', style: 'header' },
         { text: '\n' },
@@ -70,7 +71,7 @@ const PDFPreview = ({ messages }: PDFPreviewProps) => {
         iframeRef.current.src = dataUrl;
       }
     });
-  }, [messages]);
+  }, [messages, pdfContent]);
 
   return (
     <iframe

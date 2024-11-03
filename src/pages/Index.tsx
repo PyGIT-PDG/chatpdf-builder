@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from "uuid";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { sendChatMessage } from "@/lib/api";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -16,18 +18,44 @@ const Index = () => {
       type: "system",
     },
   ]);
-
+  const [pdfContent, setPdfContent] = useState(null);
   const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
 
-  const handleNewMessage = (content: string) => {
-    const newMessage: ChatMessage = {
+  const handleNewMessage = async (content: string) => {
+    // Add user message immediately
+    const userMessage: ChatMessage = {
       id: uuidv4(),
       content,
       timestamp: new Date(),
       type: "user",
     };
-    
-    setMessages((prev) => [...prev, newMessage]);
+    setMessages((prev) => [...prev, userMessage]);
+
+    try {
+      // Send message to Lyzr API
+      const response = await sendChatMessage(content);
+      
+      // Add API response message
+      const apiMessage: ChatMessage = {
+        id: uuidv4(),
+        content: response.message || "Received PDF content",
+        timestamp: new Date(),
+        type: "system",
+      };
+      setMessages((prev) => [...prev, apiMessage]);
+      
+      // Update PDF content if received in response
+      if (response.pdf_content) {
+        setPdfContent(response.pdf_content);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -50,7 +78,7 @@ const Index = () => {
           <ChatSection messages={messages} onNewMessage={handleNewMessage} />
         </div>
         <div className="flex-1 h-[50vh] md:h-auto">
-          <PDFPreview messages={messages} />
+          <PDFPreview messages={messages} pdfContent={pdfContent} />
         </div>
       </div>
     </div>
