@@ -8,17 +8,20 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { sendChatMessage } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const Index = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      content: "Welcome! Start typing to create your PDF.",
-      timestamp: new Date(),
-      type: "system",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [pdfContent, setPdfContent] = useState(null);
+  const [showInitialModal, setShowInitialModal] = useState(true);
+  const [initialDescription, setInitialDescription] = useState("");
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
@@ -63,7 +66,6 @@ const Index = () => {
     } catch (error: any) {
       let errorMessage = "Failed to send message. Please try again.";
       
-      // Check if the error is due to exhausted credits
       if (error.status === 429 || (error.body && error.body.includes("Credits exhausted"))) {
         errorMessage = "API credits have been exhausted. Please check your subscription.";
       }
@@ -74,7 +76,6 @@ const Index = () => {
         variant: "destructive",
       });
 
-      // Add error message to chat
       const errorChatMessage: ChatMessage = {
         id: uuidv4(),
         content: errorMessage,
@@ -85,8 +86,38 @@ const Index = () => {
     }
   };
 
+  const handleInitialSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (initialDescription.trim()) {
+      setShowInitialModal(false);
+      handleNewMessage(initialDescription);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
+      <Dialog open={showInitialModal} onOpenChange={setShowInitialModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Welcome to PDFGen</DialogTitle>
+            <DialogDescription>
+              Describe the type of PDF document you would like to create
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleInitialSubmit} className="space-y-4">
+            <Input
+              value={initialDescription}
+              onChange={(e) => setInitialDescription(e.target.value)}
+              placeholder="E.g., Create a professional resume template..."
+              className="w-full"
+            />
+            <Button type="submit" className="w-full">
+              Start Creating
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex justify-between items-center p-4 border-b border-chat-border dark:border-gray-700">
         <h1 className="text-xl md:text-2xl font-bold dark:text-white">PDFGen</h1>
         <Button
@@ -105,7 +136,7 @@ const Index = () => {
           <ChatSection messages={messages} onNewMessage={handleNewMessage} />
         </div>
         <div className="flex-1 h-[50vh] md:h-auto">
-          <PDFPreview messages={messages} pdfContent={pdfContent} />
+          <PDFPreview pdfContent={pdfContent} />
         </div>
       </div>
     </div>
