@@ -1,62 +1,84 @@
 import type { ChatMessage } from '@/lib/types';
-import { Document, Page, Text, View, PDFViewer, StyleSheet, Font } from '@react-pdf/renderer';
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+import { useEffect, useRef } from 'react';
+import { format } from 'date-fns';
+
+pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 interface PDFPreviewProps {
   messages: ChatMessage[];
 }
 
-Font.register({
-  family: 'Inter',
-  src: 'https://rsms.me/inter/font-files/Inter-Regular.woff2',
-});
-
-const styles = StyleSheet.create({
-  page: {
-    padding: 30,
-    fontFamily: 'Inter',
-    backgroundColor: '#1a1a1a',
-    color: '#ffffff',
-  },
-  message: {
-    marginBottom: 10,
-    padding: 10,
-    borderRadius: 5,
-  },
-  userMessage: {
-    backgroundColor: '#2563eb',
-  },
-  systemMessage: {
-    backgroundColor: '#374151',
-  },
-  timestamp: {
-    fontSize: 10,
-    color: '#9ca3af',
-    marginTop: 5,
-  },
-});
-
 const PDFPreview = ({ messages }: PDFPreviewProps) => {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    const docDefinition = {
+      content: [
+        { text: 'PDFGen', style: 'header' },
+        { text: '\n' },
+        ...messages.map((message) => ({
+          stack: [
+            {
+              text: message.content,
+              style: message.type === 'user' ? 'userMessage' : 'systemMessage',
+            },
+            {
+              text: format(message.timestamp, 'HH:mm'),
+              style: 'timestamp',
+            },
+          ],
+          margin: [0, 0, 0, 10],
+        })),
+      ],
+      styles: {
+        header: {
+          fontSize: 22,
+          bold: true,
+          alignment: 'center',
+          margin: [0, 0, 0, 20],
+        },
+        userMessage: {
+          fontSize: 12,
+          color: '#FFFFFF',
+          background: '#2563eb',
+          padding: 8,
+          borderRadius: 5,
+        },
+        systemMessage: {
+          fontSize: 12,
+          color: '#000000',
+          background: '#F8FAFC',
+          padding: 8,
+          borderRadius: 5,
+        },
+        timestamp: {
+          fontSize: 8,
+          color: '#6B7280',
+          margin: [0, 4, 0, 0],
+        },
+      },
+      defaultStyle: {
+        font: 'Helvetica',
+      },
+    };
+
+    const pdfDocGenerator = pdfMake.createPdf(docDefinition);
+    
+    pdfDocGenerator.getDataUrl((dataUrl) => {
+      if (iframeRef.current) {
+        iframeRef.current.src = dataUrl;
+      }
+    });
+  }, [messages]);
+
   return (
-    <PDFViewer className="w-full h-full dark:bg-gray-900">
-      <Document>
-        <Page size="A4" style={styles.page}>
-          {messages.map((message) => (
-            <View
-              key={message.id}
-              style={[
-                styles.message,
-                message.type === 'user' ? styles.userMessage : styles.systemMessage,
-              ]}
-            >
-              <Text>{message.content}</Text>
-              <Text style={styles.timestamp}>
-                {message.timestamp.toLocaleTimeString()}
-              </Text>
-            </View>
-          ))}
-        </Page>
-      </Document>
-    </PDFViewer>
+    <iframe
+      ref={iframeRef}
+      className="w-full h-full dark:bg-gray-900 border-0"
+      title="PDF Preview"
+    />
   );
 };
 
