@@ -24,7 +24,6 @@ const Index = () => {
 
   const extractPDFContent = (response: string) => {
     try {
-      // Extract JSON string between ```json and ``` markers
       const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/);
       if (jsonMatch && jsonMatch[1]) {
         return JSON.parse(jsonMatch[1]);
@@ -48,10 +47,8 @@ const Index = () => {
     try {
       const response = await sendChatMessage(content);
       
-      // Extract the PDF content from the response
       const pdfDefinition = extractPDFContent(response.response);
       
-      // Add API response message
       const apiMessage: ChatMessage = {
         id: uuidv4(),
         content: response.message || "Received PDF content",
@@ -60,16 +57,31 @@ const Index = () => {
       };
       setMessages((prev) => [...prev, apiMessage]);
       
-      // Update PDF content with the parsed definition
       if (pdfDefinition) {
         setPdfContent(pdfDefinition);
       }
-    } catch (error) {
+    } catch (error: any) {
+      let errorMessage = "Failed to send message. Please try again.";
+      
+      // Check if the error is due to exhausted credits
+      if (error.status === 429 || (error.body && error.body.includes("Credits exhausted"))) {
+        errorMessage = "API credits have been exhausted. Please check your subscription.";
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to send message. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
+
+      // Add error message to chat
+      const errorChatMessage: ChatMessage = {
+        id: uuidv4(),
+        content: errorMessage,
+        timestamp: new Date(),
+        type: "system",
+      };
+      setMessages((prev) => [...prev, errorChatMessage]);
     }
   };
 
