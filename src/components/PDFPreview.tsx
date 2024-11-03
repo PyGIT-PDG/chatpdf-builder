@@ -40,7 +40,7 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
           text: match[0],
           color: 'blue',
           decoration: 'underline',
-          link: `placeholder:${match[0]}`,
+          link: match[0], // Simplified link format
           preserveLeadingSpaces: true
         });
 
@@ -79,35 +79,38 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
   useEffect(() => {
     if (!currentContent) return;
     
-    const pdfDocGenerator = pdfMake.createPdf(currentContent);
+    const pdfDocGenerator = pdfMake.createPdf({
+      ...currentContent,
+      pageSize: 'A4',
+      pageOrientation: 'portrait',
+      pageMargins: [40, 60, 40, 60],
+    });
+
     pdfDocGenerator.getDataUrl((dataUrl) => {
       if (iframeRef.current) {
         iframeRef.current.src = dataUrl;
+        
+        // Add event listener after the iframe loads
+        iframeRef.current.onload = () => {
+          const iframeDocument = iframeRef.current?.contentDocument;
+          if (!iframeDocument) return;
+
+          // Add click event listener to capture all clicks in the PDF
+          iframeDocument.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'A') {
+              e.preventDefault();
+              const placeholder = target.getAttribute('href');
+              if (placeholder) {
+                setSelectedPlaceholder(placeholder);
+                setIsModalOpen(true);
+              }
+            }
+          });
+        };
       }
     });
   }, [currentContent]);
-
-  const handleIframeLoad = () => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
-
-    const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!iframeDocument) return;
-
-    iframeDocument.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      const closestLink = target.closest('a');
-      
-      if (closestLink && closestLink.href) {
-        e.preventDefault();
-        const placeholder = closestLink.href.split('placeholder:')[1];
-        if (placeholder) {
-          setSelectedPlaceholder(decodeURIComponent(placeholder));
-          setIsModalOpen(true);
-        }
-      }
-    });
-  };
 
   const handleSavePlaceholder = (newValue: string) => {
     if (!currentContent) return;
@@ -118,12 +121,12 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
         return obj.map(item => updateText(item));
       }
       if (typeof obj === 'object' && obj !== null) {
-        if (obj.text === selectedPlaceholder && obj.link?.startsWith('placeholder:')) {
+        if (obj.text === selectedPlaceholder && obj.link) {
           return {
             text: `[${newValue}]`,
             color: 'blue',
             decoration: 'underline',
-            link: `placeholder:[${newValue}]`,
+            link: `[${newValue}]`,
             preserveLeadingSpaces: true
           };
         }
@@ -154,7 +157,6 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
         ref={iframeRef}
         className="w-full h-full dark:bg-gray-900 border-0"
         title="PDF Preview"
-        onLoad={handleIframeLoad}
       />
       <EditPlaceholderModal
         isOpen={isModalOpen}
