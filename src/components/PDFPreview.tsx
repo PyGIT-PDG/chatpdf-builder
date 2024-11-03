@@ -8,7 +8,7 @@ import type { ChatMessage } from '@/lib/types';
 pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
 
 interface PDFPreviewProps {
-  messages: ChatMessage[];
+  messages?: ChatMessage[];
   pdfContent?: any;
 }
 
