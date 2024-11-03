@@ -21,7 +21,6 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
   const [selectedPlaceholder, setSelectedPlaceholder] = useState("");
   const { toast } = useToast();
 
-  // Function to process content and make placeholders clickable
   const processContent = (content: any): any => {
     if (typeof content === 'string') {
       const placeholderRegex = /\[([^\]]+)\]/g;
@@ -30,24 +29,21 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
       let match;
 
       while ((match = placeholderRegex.exec(content)) !== null) {
-        // Add text before the placeholder
         if (match.index > lastIndex) {
           parts.push({ text: content.slice(lastIndex, match.index) });
         }
 
-        // Add the placeholder as a clickable link
         parts.push({
           text: match[0],
           color: 'blue',
           decoration: 'underline',
-          link: match[0], // Simplified link format
+          link: '#' + encodeURIComponent(match[0]), // Use hash to prevent URL construction
           preserveLeadingSpaces: true
         });
 
         lastIndex = match.index + match[0].length;
       }
 
-      // Add remaining text after last placeholder
       if (lastIndex < content.length) {
         parts.push({ text: content.slice(lastIndex) });
       }
@@ -90,18 +86,17 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
       if (iframeRef.current) {
         iframeRef.current.src = dataUrl;
         
-        // Add event listener after the iframe loads
         iframeRef.current.onload = () => {
           const iframeDocument = iframeRef.current?.contentDocument;
           if (!iframeDocument) return;
 
-          // Add click event listener to capture all clicks in the PDF
           iframeDocument.addEventListener('click', (e) => {
             const target = e.target as HTMLElement;
             if (target.tagName === 'A') {
               e.preventDefault();
-              const placeholder = target.getAttribute('href');
-              if (placeholder) {
+              const href = target.getAttribute('href');
+              if (href && href.startsWith('#')) {
+                const placeholder = decodeURIComponent(href.substring(1));
                 setSelectedPlaceholder(placeholder);
                 setIsModalOpen(true);
               }
@@ -126,7 +121,7 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
             text: `[${newValue}]`,
             color: 'blue',
             decoration: 'underline',
-            link: `[${newValue}]`,
+            link: '#' + encodeURIComponent(`[${newValue}]`),
             preserveLeadingSpaces: true
           };
         }
