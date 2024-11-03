@@ -136,12 +136,12 @@ const Index = () => {
             />
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">Example prompts:</p>
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 {randomExamples.map((example, index) => (
                   <Button
                     key={index}
                     variant="outline"
-                    className="justify-start h-auto py-3 px-4 whitespace-normal text-left"
+                    className="aspect-square h-auto p-4 whitespace-normal text-left flex items-center justify-center text-center hover:bg-accent"
                     onClick={() => setInitialDescription(example)}
                   >
                     {example}
