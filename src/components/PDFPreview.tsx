@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import type { ChatMessage } from '@/lib/types';
 import EditPlaceholderModal from './EditPlaceholderModal';
 import { useToast } from './ui/use-toast';
-import { useLocation, useNavigate } from 'react-router-dom';
 
 // Initialize pdfMake with the virtual file system
 (window as any).pdfMake = pdfMake;
@@ -17,12 +16,11 @@ interface PDFPreviewProps {
 
 const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [currentContent, setCurrentContent] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlaceholder, setSelectedPlaceholder] = useState("");
   const { toast } = useToast();
-  const location = useLocation();
-  const navigate = useNavigate();
 
   const processContent = (content: any): any => {
     if (typeof content === 'string') {
@@ -36,12 +34,11 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
           parts.push({ text: content.slice(lastIndex, match.index) });
         }
 
-        const encodedPlaceholder = encodeURIComponent(match[0]);
         parts.push({
           text: match[0],
           color: 'blue',
           decoration: 'underline',
-          link: `${window.location.pathname}?placeholder=${encodedPlaceholder}`,
+          link: match[0], // Just use the placeholder text as the link
           preserveLeadingSpaces: true
         });
 
@@ -77,16 +74,29 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
   }, [pdfContent]);
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const placeholder = searchParams.get('placeholder');
-    
-    if (placeholder) {
-      setSelectedPlaceholder(decodeURIComponent(placeholder));
-      setIsModalOpen(true);
-      // Clear the URL parameter after opening the modal
-      navigate(location.pathname, { replace: true });
+    const handleLinkClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'A') {
+        e.preventDefault();
+        const href = target.getAttribute('href');
+        if (href) {
+          setSelectedPlaceholder(href);
+          setIsModalOpen(true);
+        }
+      }
+    };
+
+    const wrapper = wrapperRef.current;
+    if (wrapper) {
+      wrapper.addEventListener('click', handleLinkClick);
     }
-  }, [location.search, navigate]);
+
+    return () => {
+      if (wrapper) {
+        wrapper.removeEventListener('click', handleLinkClick);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!currentContent) return;
@@ -115,12 +125,11 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
       }
       if (typeof obj === 'object' && obj !== null) {
         if (obj.text === selectedPlaceholder && obj.link) {
-          const encodedNewValue = encodeURIComponent(`[${newValue}]`);
           return {
             text: `[${newValue}]`,
             color: 'blue',
             decoration: 'underline',
-            link: `${window.location.pathname}?placeholder=${encodedNewValue}`,
+            link: `[${newValue}]`,
             preserveLeadingSpaces: true
           };
         }
@@ -146,7 +155,7 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
   };
 
   return (
-    <>
+    <div ref={wrapperRef} className="w-full h-full">
       <iframe
         ref={iframeRef}
         className="w-full h-full dark:bg-gray-900 border-0"
@@ -158,7 +167,7 @@ const PDFPreview = ({ pdfContent }: PDFPreviewProps) => {
         onSave={handleSavePlaceholder}
         placeholder={selectedPlaceholder}
       />
-    </>
+    </div>
   );
 };
 
