@@ -22,8 +22,21 @@ const Index = () => {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
+  const extractPDFContent = (response: string) => {
+    try {
+      // Extract JSON string between ```json and ``` markers
+      const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/);
+      if (jsonMatch && jsonMatch[1]) {
+        return JSON.parse(jsonMatch[1]);
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to parse PDF content:', error);
+      return null;
+    }
+  };
+
   const handleNewMessage = async (content: string) => {
-    // Add user message immediately
     const userMessage: ChatMessage = {
       id: uuidv4(),
       content,
@@ -33,8 +46,10 @@ const Index = () => {
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      // Send message to Lyzr API
       const response = await sendChatMessage(content);
+      
+      // Extract the PDF content from the response
+      const pdfDefinition = extractPDFContent(response.response);
       
       // Add API response message
       const apiMessage: ChatMessage = {
@@ -45,9 +60,9 @@ const Index = () => {
       };
       setMessages((prev) => [...prev, apiMessage]);
       
-      // Update PDF content if received in response
-      if (response.pdf_content) {
-        setPdfContent(response.pdf_content);
+      // Update PDF content with the parsed definition
+      if (pdfDefinition) {
+        setPdfContent(pdfDefinition);
       }
     } catch (error) {
       toast({
