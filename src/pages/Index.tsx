@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 const Index = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -105,11 +105,11 @@ const Index = () => {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleInitialSubmit} className="space-y-4">
-            <Input
+            <Textarea
               value={initialDescription}
               onChange={(e) => setInitialDescription(e.target.value)}
               placeholder="E.g., Create a professional resume template..."
-              className="w-full"
+              className="w-full min-h-[100px]"
             />
             <Button type="submit" className="w-full">
               Start Creating
